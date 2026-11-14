@@ -71,8 +71,10 @@ def _obs_rows(d: pd.DataFrame, sid: str, src: str) -> pd.DataFrame:
                          "n": d["n"].astype(int).values, "src": src, "stuck": d["stuck"].astype(int).values})
 
 
-def update_obs(st: pd.DataFrame, P: config.Paths, src: Sources, backfill: bool, log: Callable) -> pd.DataFrame:
-    """Pomiary: dane zweryfikowane (raz, przy rekonstrukcji) i bieżące (przy każdym przebiegu)."""
+def update_obs(st: pd.DataFrame, P: config.Paths, src: Sources, backfill: bool, log: Callable,
+               today: dt.date | None = None) -> pd.DataFrame:
+    """Pomiary: dane zweryfikowane (raz, przy rekonstrukcji) i bieżące (przy każdym przebiegu).
+    Bieżąca doba (UTC) nie jest jeszcze pełna, więc do tabeli wchodzą tylko doby zakończone."""
     old = read_table(P.obs, "obs", ["date"])
     have_verified = set(old.loc[old["src"] == "verified", "station"]) if len(old) else set()
     new, failed = [], []
@@ -91,6 +93,8 @@ def update_obs(st: pd.DataFrame, P: config.Paths, src: Sources, backfill: bool, 
     d["_rank"] = (d["src"] != "verified").astype(int)      # zweryfikowane przed bieżącymi; nowe przed starymi
     d = d.sort_values("_rank", kind="stable").drop_duplicates(["date", "station"], keep="first").drop(columns="_rank")
     d = d[d["station"].isin(set(st["id"]))]
+    if today is not None:
+        d = d[d["date"] < pd.Timestamp(today)]
     write_table(d, P.obs, "obs", "date", ["date", "station"])
     log(f"pomiary: {len(d)} wierszy, stacji {d['station'].nunique()}, błędów pobrania {len(failed)}")
     return d
@@ -231,7 +235,7 @@ def evaluate(st: pd.DataFrame, obs: pd.DataFrame, arch: pd.DataFrame, live: pd.D
                  "fc": _vals(f_arch[sid].reindex(idx)) if sid in f_arch else [None] * len(idx),
                  "fc_live": _vals(l1[sid].reindex(idx)) if sid in l1 else [None] * len(idx)}
         nxt = latest[latest["station"] == sid].set_index("lead")["pm25"]
-        last30 = o[o.index > yesterday - pd.Timedelta(days=30)]
+        last30 = o[(o.index > yesterday - pd.Timedelta(days=30)) & (o.index <= yesterday)]
         stations.append({
             "id": sid, "country": s["country"], "city": s["city"], "name": s["name"], "lat": float(s["lat"]),
             "lon": float(s["lon"]),
@@ -281,7 +285,7 @@ def run(root: str | Path | None = None, today: dt.date | None = None, backfill: 
     try:
         st = stations if stations is not None else registry.load()
         log(f"Air Check {today}: stacji {len(st)}, rekonstrukcja: {backfill}")
-        obs = update_obs(st, P, src, backfill, log)
+        obs = update_obs(st, P, src, backfill, log, today)
         arch = update_archive(st, P, src, today, backfill, log)
         live = update_live(st, P, src, today, log)
         g = gate(st, obs, live, today)

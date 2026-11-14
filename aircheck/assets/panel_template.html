@@ -212,7 +212,8 @@ function map(){
     markers[s.id] = L.circleMarker([s.lat, s.lon], {radius: 8, color: '#ffffff', weight: 1, fillColor: COL[v], fillOpacity: 0.95})
       .addTo(m).bindTooltip(esc(s.city) + ': ' + f1(s.forecast.tomorrow) + ' µg/m³ tomorrow · ' + LAB[v])
       .on('click', () => { sel = s.id; detail(); }); });
-  if (S.length) m.fitBounds(L.latLngBounds(S.map(s => [s.lat, s.lon])).pad(0.08));
+  const fit = () => { m.invalidateSize(); if (S.length) m.fitBounds(L.latLngBounds(S.map(s => [s.lat, s.lon])).pad(0.08)); };
+  fit(); setTimeout(fit, 150); window.addEventListener('load', fit);
 }
 
 document.getElementById('foot').innerHTML = 'Measurements: European Environment Agency (EEA), Air Quality e-Reporting, reported by the national networks. ' +
