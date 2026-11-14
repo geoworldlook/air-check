@@ -1,0 +1,30 @@
+[project]
+name = "aircheck"
+version = "1.0.0"
+description = "Is the Copernicus (CAMS) air-quality forecast right in my city? Daily check against official stations"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "pandas",
+    "pyarrow",
+    "requests",
+]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["aircheck", "aircheck.sources"]
+
+[tool.setuptools.package-data]
+aircheck = ["stations.csv", "assets/*"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "B"]
+ignore = ["B008", "B023", "B028", "B905"]

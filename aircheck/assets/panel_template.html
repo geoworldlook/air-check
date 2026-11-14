@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Air Check: is the air-quality forecast right in my city?</title>
+<style>
+/*LEAFLET_CSS*/
+:root{--bg:#eef2ea;--panel:#fff;--ink:#1f2a22;--muted:#5d695f;--line:#dde3d8;--brand:#6f9b3a;--brand-d:#4b7023;
+--brand-l:#eaf2df;--ok:#2f7a45;--warn:#a26b00;--bad:#b23a2e;--grey:#8a8f88;--nd:#cfd3cc;--obs:#1f2a22;--fc:#2f75b5;--live:#d9822b;
+--ui:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.45}
+header{background:var(--panel);border-bottom:1px solid var(--line);padding:14px 20px;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline}
+header h1{font-size:20px;margin:0}
+header .tag{color:var(--muted)}
+header .upd{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;color:#fff;background:var(--grey)}
+.pill.better{background:var(--ok)}.pill.worse{background:var(--bad)}.pill.similar{background:var(--grey)}
+.pill.insufficient{background:var(--nd);color:var(--ink)}.pill.ok{background:var(--ok)}.pill.warn{background:var(--warn)}
+main{max-width:1240px;margin:0 auto;padding:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.kpi .v{font-size:26px;font-weight:700}.kpi .l{color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+#map{height:520px;border-radius:10px;border:1px solid var(--line)}
+h2{font-size:16px;margin:0 0 8px}h3{font-size:14px;margin:14px 0 6px}
+.big{font-size:34px;font-weight:700}.unit{font-size:14px;color:var(--muted);font-weight:400}
+.muted{color:var(--muted)}.small{font-size:13px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--panel)}
+tbody tr{cursor:pointer}tbody tr:hover{background:var(--brand-l)}tbody tr.sel{background:var(--brand-l)}
+.scroll{overflow:auto;max-height:560px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;font-size:13.5px}
+.kv div:nth-child(odd){color:var(--muted)}
+svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:4px 0}
+.sw{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:5px}
+.banner{background:#fff5dd;border:1px solid #e8cf8f;border-radius:10px;padding:10px 14px;margin-bottom:14px}
+footer{max-width:1240px;margin:0 auto;padding:6px 16px 30px;color:var(--muted);font-size:12.5px}
+a{color:var(--brand-d)}
+ul{margin:6px 0 6px 18px;padding:0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Air Check</h1>
+  <span class="tag">Is the Copernicus air-quality forecast right in my city?</span>
+  <span class="upd" id="upd"></span>
+</header>
+<main>
+  <div id="banner"></div>
+  <div class="kpis" id="kpis"></div>
+  <div class="grid">
+    <div><div id="map"></div>
+      <div class="legend" style="margin-top:8px">
+        <span><span class="pill better">better</span> forecast beats “tomorrow = today”</span>
+        <span><span class="pill similar">similar</span> no clear difference</span>
+        <span><span class="pill worse">worse</span> the simple rule wins</span>
+        <span><span class="pill insufficient">no verdict</span> too few days</span>
+      </div>
+    </div>
+    <div class="card" id="detail"></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h2>All cities</h2>
+    <p class="muted small" style="margin:0 0 8px">Daily mean PM2.5 in µg/m³. Error (RMSE) of the forecast and of the rule
+    “tomorrow will be like today”, last 365 days, reconstructed from the forecast archive. Skill above 0 means the forecast is better.</p>
+    <div class="scroll"><table id="tbl"></table></div>
+  </div>
+  <div class="card" style="margin-top:14px" id="trust"></div>
+</main>
+<footer id="foot"></footer>
+<script type="application/json" id="data">/*DATA*/</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const S = D.stations, T = D.threshold;
+const COL = {better:'#2f7a45', similar:'#8a8f88', worse:'#b23a2e', insufficient:'#cfd3cc'};
+const LAB = {better:'better', similar:'similar', worse:'worse', insufficient:'no verdict'};
+const f1 = v => (v === null || v === undefined) ? '–' : Number(v).toFixed(1);
+const f2 = v => (v === null || v === undefined) ? '–' : Number(v).toFixed(2);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let sel = S.length ? S.slice().sort((a,b) => (b.forecast.tomorrow||0) - (a.forecast.tomorrow||0))[0].id : null;
+let markers = {};
+
+document.getElementById('upd').textContent = 'updated ' + D.updated + ' · forecast issued ' + (S[0] ? S[0].forecast.issued : '–');
+if (!D.gate.passed) document.getElementById('banner').innerHTML =
+  '<div class="banner"><b>Data quality gate:</b> ' + esc(D.gate.problems.join('; ')) + '</div>';
+
+function kpis(){
+  const a = D.summary.archive_365, t = D.test, n = D.summary.stations;
+  const decided = a.better + a.similar + a.worse;
+  const high = S.filter(s => s.forecast.tomorrow !== null && s.forecast.tomorrow > T).length;
+  const items = [
+    [n, 'cities checked every day in ' + D.summary.countries.length + ' countries'],
+    [a.better + ' of ' + decided, 'cities where the forecast clearly beats “tomorrow = today” (last 365 days)'],
+    [a.worse + ' of ' + decided, 'cities where the simple rule clearly wins'],
+    [high, 'cities with a high-PM day forecast for tomorrow (above ' + T + ' µg/m³)'],
+    ['day ' + t.days_elapsed + ' of ' + t.days_total, 'live confirmation test (' + t.window[0] + ' to ' + t.window[1] + ')']];
+  document.getElementById('kpis').innerHTML = items.map(i =>
+    '<div class="card kpi"><div class="v">' + i[0] + '</div><div class="l">' + i[1] + '</div></div>').join('');
+}
+
+function chart(s){
+  const c = s.chart, n = c.dates.length, W = 640, H = 220, L = 38, R = 8, Tp = 10, B = 24;
+  const all = [].concat(c.obs, c.fc, c.fc_live).filter(v => v !== null);
+  const ymax = Math.max(T * 1.2, all.length ? Math.max.apply(null, all) * 1.08 : T * 1.2);
+  const x = i => L + (W - L - R) * i / Math.max(1, n - 1), y = v => Tp + (H - Tp - B) * (1 - v / ymax);
+  const path = (arr) => { let d = '', pen = false;
+    arr.forEach((v, i) => { if (v === null) { pen = false; return; } d += (pen ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); pen = true; });
+    return d; };
+  let g = '';
+  const step = ymax > 80 ? 20 : (ymax > 40 ? 10 : 5);
+  for (let v = 0; v <= ymax; v += step) g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v) + '" y2="' + y(v) +
+    '" stroke="#e6eae2"/><text x="' + (L - 6) + '" y="' + (y(v) + 4) + '" text-anchor="end" font-size="11" fill="#5d695f">' + v + '</text>';
+  [0, Math.floor(n / 3), Math.floor(2 * n / 3), n - 1].forEach(i => { g += '<text x="' + x(i) + '" y="' + (H - 6) +
+    '" text-anchor="middle" font-size="11" fill="#5d695f">' + c.dates[i].slice(5) + '</text>'; });
+  g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(T) + '" y2="' + y(T) + '" stroke="#b23a2e" stroke-dasharray="4 4"/>';
+  g += '<path d="' + path(c.fc) + '" fill="none" stroke="#2f75b5" stroke-width="1.6"/>';
+  g += '<path d="' + path(c.obs) + '" fill="none" stroke="#1f2a22" stroke-width="1.8"/>';
+  c.fc_live.forEach((v, i) => { if (v !== null) g += '<circle cx="' + x(i) + '" cy="' + y(v) + '" r="2.6" fill="#d9822b"/>'; });
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Measured and forecast PM2.5, last ' + n + ' days">' + g + '</svg>' +
+    '<div class="legend"><span><span class="sw" style="background:#1f2a22"></span>measured at the station</span>' +
+    '<span><span class="sw" style="background:#2f75b5"></span>forecast (archive)</span>' +
+    '<span><span class="sw" style="background:#d9822b"></span>day-ahead forecast saved live</span>' +
+    '<span><span class="sw" style="background:#b23a2e"></span>' + T + ' µg/m³</span></div>';
+}
+
+function bars(s){
+  const ys = s.years, W = 640, H = 120, L = 38, B = 22, m = Math.max(10, Math.max.apply(null, ys.map(v => v.exceed)));
+  const bw = (W - L - 10) / ys.length;
+  let g = '';
+  ys.forEach((v, i) => { const h = (H - B - 14) * v.exceed / m, x0 = L + i * bw + bw * 0.18;
+    g += '<rect x="' + x0 + '" y="' + (H - B - h) + '" width="' + bw * 0.64 + '" height="' + h + '" fill="#6f9b3a"/>' +
+      '<text x="' + (x0 + bw * 0.32) + '" y="' + (H - B - h - 4) + '" text-anchor="middle" font-size="12" fill="#1f2a22">' + v.exceed + '</text>' +
+      '<text x="' + (x0 + bw * 0.32) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="11" fill="#5d695f">' + v.year + ' (' + v.days + ' d)</text>'; });
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Days above the threshold per year">' + g + '</svg>';
+}
+
+function detail(){
+  const s = S.find(v => v.id === sel); if (!s) return;
+  const a = s.archive_365, l = s.live, fc = s.forecast;
+  const ci = a.skill_ci && a.skill_ci[0] !== null ? ' (95% CI ' + f2(a.skill_ci[0]) + ' to ' + f2(a.skill_ci[1]) + ')' : '';
+  const words = {better:'In this city the forecast was clearly better than the rule “tomorrow will be like today”.',
+    worse:'In this city the simple rule “tomorrow will be like today” was clearly better than the forecast.',
+    similar:'In this city the forecast and the rule “tomorrow will be like today” were about equally good.',
+    insufficient:'There are too few compared days for a verdict.'}[a.verdict];
+  let h = '<h2>' + esc(s.city) + ' <span class="muted">(' + s.country + ')</span> <span class="pill ' + a.verdict + '">' + LAB[a.verdict] + '</span></h2>' +
+    '<div class="muted small">Station ' + esc(s.id) + ' · ' + esc(s.name) + '</div>' +
+    '<div style="margin:10px 0 2px"><span class="big">' + f1(fc.tomorrow) + '</span> <span class="unit">µg/m³ forecast for tomorrow' +
+    (fc.tomorrow !== null && fc.tomorrow > T ? ' · <b style="color:#b23a2e">high-PM day</b>' : '') + '</span></div>' +
+    '<div class="muted small">today ' + f1(fc.today) + ' · day after tomorrow ' + f1(fc.day2) + ' · issued ' + fc.issued + '</div>' +
+    '<h3>How far to trust it here</h3><p style="margin:0 0 6px">' + words + '</p>';
+  if (a.n) h += '<div class="kv"><div>Days compared (last 365)</div><div>' + a.n + '</div>' +
+    '<div>Forecast error (RMSE)</div><div>' + f1(a.rmse_fc) + ' µg/m³</div>' +
+    '<div>“Tomorrow = today” error</div><div>' + f1(a.rmse_pers) + ' µg/m³</div>' +
+    '<div>Skill</div><div>' + f2(a.skill) + ci + '</div>' +
+    '<div>Average bias</div><div>' + (a.bias > 0 ? '+' : '') + f1(a.bias) + ' µg/m³ (winter: ' + f1(s.archive_winter.bias) + ')</div>' +
+    '<div>High-PM days measured</div><div>' + a.exceed_days + ' · forecast hit ' + a.hits + ', missed ' + a.misses + ', false alarms ' + a.false_alarms + '</div></div>';
+  h += '<h3>Last ' + s.chart.dates.length + ' days</h3>' + chart(s) +
+    '<h3>Days above ' + T + ' µg/m³ per year (measured)</h3>' + bars(s) +
+    '<p class="muted small" style="margin:8px 0 0">Live day-ahead forecasts compared so far: ' + (l.n || 0) + ' days' +
+    (l.n >= 30 ? ' · forecast error ' + f1(l.rmse_fc) + ' vs ' + f1(l.rmse_pers) + ' µg/m³' : '') +
+    '. Last measurement: ' + (s.qc.last_obs || '–') + '; missing days in the last 30: ' + s.qc.missing_last30 + '.</p>';
+  document.getElementById('detail').innerHTML = h;
+  document.querySelectorAll('#tbl tbody tr').forEach(r => r.classList.toggle('sel', r.dataset.id === sel));
+  Object.keys(markers).forEach(k => markers[k].setStyle({weight: k === sel ? 3 : 1, color: k === sel ? '#1f2a22' : '#ffffff'}));
+}
+
+function table(){
+  const rows = S.slice().sort((a, b) => a.country.localeCompare(b.country) || a.city.localeCompare(b.city));
+  let h = '<thead><tr><th>City</th><th>Country</th><th>Tomorrow</th><th>Forecast error</th><th>“Tomorrow = today” error</th>' +
+    '<th>Skill (95% CI)</th><th>High-PM days</th><th>Hit score forecast / rule</th><th>Verdict</th></tr></thead><tbody>';
+  rows.forEach(s => { const a = s.archive_365;
+    h += '<tr data-id="' + s.id + '"><td>' + esc(s.city) + '</td><td>' + s.country + '</td><td>' + f1(s.forecast.tomorrow) + '</td><td>' +
+      f1(a.rmse_fc) + '</td><td>' + f1(a.rmse_pers) + '</td><td>' + f2(a.skill) +
+      (a.skill_ci && a.skill_ci[0] !== null ? ' (' + f2(a.skill_ci[0]) + ' to ' + f2(a.skill_ci[1]) + ')' : '') + '</td><td>' +
+      (a.exceed_days === undefined ? '–' : a.exceed_days) + '</td><td>' + f2(a.csi_fc) + ' / ' + f2(a.csi_pers) +
+      '</td><td><span class="pill ' + a.verdict + '">' + LAB[a.verdict] + '</span></td></tr>'; });
+  const t = document.getElementById('tbl'); t.innerHTML = h + '</tbody>';
+  t.querySelectorAll('tbody tr').forEach(r => r.addEventListener('click', () => { sel = r.dataset.id; detail(); }));
+}
+
+function trust(){
+  const t = D.test, h1 = t['H-A1'], h2 = t['H-A2'];
+  document.getElementById('trust').innerHTML = '<h2>How far to trust this page</h2>' +
+    '<ul><li><b>What is compared.</b> The daily mean PM2.5 forecast by the Copernicus Atmosphere Monitoring Service (CAMS, about 10 km grid) ' +
+    'against the daily mean measured at one official urban background station per city.</li>' +
+    '<li><b>The yardstick.</b> The simplest possible forecast: “tomorrow will be like today”. A forecast is useful only if it beats this rule.</li>' +
+    '<li><b>Reconstructed results.</b> Numbers for the last 365 days use archived forecasts with a lead time below one day. ' +
+    'They are descriptive: the rules were written after these data existed.</li>' +
+    '<li><b>Live test.</b> Since ' + (D.summary.first_issue || '–') + ' every day-ahead forecast is saved on the day it is issued. ' +
+    'The test rules were fixed before the first test day (protocol A1). Window: ' + t.window[0] + ' to ' + t.window[1] +
+    ', day ' + t.days_elapsed + ' of ' + t.days_total + '.</li>' +
+    '<li><b>H-A1</b> (forecast error lower than the rule in at least two thirds of stations): <b>' + h1.status + '</b>' +
+    (h1.stations ? ' · ' + h1.better + ' of ' + h1.stations + ' stations so far' : '') + '.</li>' +
+    '<li><b>H-A2</b> (forecast catches high-PM days better than the rule in most stations with at least 10 such days): <b>' + h2.status + '</b>' +
+    (h2.stations ? ' · ' + h2.better + ' of ' + h2.stations + ' stations so far' : '') + '.</li>' +
+    '<li><b>Limits.</b> A station is one point and the forecast is a 10 km square. Current-year measurements are not yet verified by the ' +
+    'national networks. This page says nothing about health effects or legal limits.</li></ul>';
+}
+
+function map(){
+  if (typeof L === 'undefined') { document.getElementById('map').style.display = 'none'; return; }
+  const m = L.map('map', {scrollWheelZoom: false}).setView([54, 12], 4);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 12, attribution: '© OpenStreetMap contributors'}).addTo(m);
+  S.forEach(s => { const v = s.archive_365.verdict;
+    markers[s.id] = L.circleMarker([s.lat, s.lon], {radius: 8, color: '#ffffff', weight: 1, fillColor: COL[v], fillOpacity: 0.95})
+      .addTo(m).bindTooltip(esc(s.city) + ': ' + f1(s.forecast.tomorrow) + ' µg/m³ tomorrow · ' + LAB[v])
+      .on('click', () => { sel = s.id; detail(); }); });
+  if (S.length) m.fitBounds(L.latLngBounds(S.map(s => [s.lat, s.lon])).pad(0.08));
+}
+
+document.getElementById('foot').innerHTML = 'Measurements: European Environment Agency (EEA), Air Quality e-Reporting, reported by the national networks. ' +
+  'Forecast: Copernicus Atmosphere Monitoring Service (CAMS) European air quality forecasts, via Open-Meteo. ' +
+  'Generated using Copernicus Atmosphere Monitoring Service information. Code and method: ' +
+  '<a href="https://github.com/geoworldlook/air-check">github.com/geoworldlook/air-check</a>.';
+kpis(); table(); map(); detail(); trust();
+</script>
+</body>
+</html>

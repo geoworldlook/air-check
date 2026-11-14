@@ -1,0 +1,12 @@
+# Air Check environment for conda / Miniforge (Windows, macOS, Linux):
+#   conda env create -f environment.yml      (update: conda env update -n aircheck -f environment.yml --prune)
+name: aircheck
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy
+  - pandas
+  - pyarrow
+  - requests
+  - ruff

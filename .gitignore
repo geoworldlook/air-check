@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# local run state (the tables in data/obs and data/forecast ARE tracked: they are the pipeline state)
+data/logs/
+data/_selftest/
