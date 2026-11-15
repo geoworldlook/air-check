@@ -14,9 +14,9 @@
     "project": "air-check",
     "id": "PL0141A",
     "title": "Air Check · Warszawa",
-    "description": "PM2.5 forecast for tomorrow: 19.9 µg/m³. Last 365 days: the rule 'tomorrow = today' beats the forecast (error 10.19 vs 7.68 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 19.0 µg/m³. Last 365 days: the rule 'tomorrow = today' beats the forecast (error 10.17 vs 7.68 µg/m³).",
     "status": "worse",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -33,9 +33,9 @@
     "project": "air-check",
     "id": "PL0008A",
     "title": "Air Check · Katowice",
-    "description": "PM2.5 forecast for tomorrow: 28.7 µg/m³. Last 365 days: the rule 'tomorrow = today' beats the forecast (error 18.77 vs 6.45 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 20.1 µg/m³. Last 365 days: the rule 'tomorrow = today' beats the forecast (error 18.77 vs 6.46 µg/m³).",
     "status": "worse",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -52,9 +52,9 @@
     "project": "air-check",
     "id": "PL0194A",
     "title": "Air Check · Wrocław",
-    "description": "PM2.5 forecast for tomorrow: 18.7 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 8.8 vs 7.62 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 14.0 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 8.78 vs 7.62 µg/m³).",
     "status": "similar",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -71,9 +71,9 @@
     "project": "air-check",
     "id": "PL0052A",
     "title": "Air Check · Gdańsk",
-    "description": "PM2.5 forecast for tomorrow: 16.5 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 6.44 vs 7.9 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 15.4 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 6.43 vs 7.89 µg/m³).",
     "status": "better",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -90,9 +90,9 @@
     "project": "air-check",
     "id": "PL0096A",
     "title": "Air Check · Łódź",
-    "description": "PM2.5 forecast for tomorrow: 19.8 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 7.33 vs 6.52 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 16.7 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 7.32 vs 6.52 µg/m³).",
     "status": "similar",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -109,9 +109,9 @@
     "project": "air-check",
     "id": "IT1692A",
     "title": "Air Check · Milano",
-    "description": "PM2.5 forecast for tomorrow: 27.8 µg/m³. Last 365 days: the rule 'tomorrow = today' beats the forecast (error 17.33 vs 9.67 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 32.5 µg/m³. Last 365 days: the rule 'tomorrow = today' beats the forecast (error 17.33 vs 9.54 µg/m³).",
     "status": "worse",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -128,9 +128,9 @@
     "project": "air-check",
     "id": "IT1128A",
     "title": "Air Check · Torino",
-    "description": "PM2.5 forecast for tomorrow: 23.9 µg/m³. Last 365 days: the rule 'tomorrow = today' beats the forecast (error 8.97 vs 6.77 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 30.4 µg/m³. Last 365 days: the rule 'tomorrow = today' beats the forecast (error 8.98 vs 6.77 µg/m³).",
     "status": "worse",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -147,9 +147,9 @@
     "project": "air-check",
     "id": "IT2301A",
     "title": "Air Check · Brescia",
-    "description": "PM2.5 forecast for tomorrow: 27.3 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 9.56 vs 9.01 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 37.8 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 9.45 vs 8.88 µg/m³).",
     "status": "similar",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -166,9 +166,9 @@
     "project": "air-check",
     "id": "IT1906A",
     "title": "Air Check · Roma",
-    "description": "PM2.5 forecast for tomorrow: 6.3 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 5.5 vs 5.91 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 8.7 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 5.52 vs 6.09 µg/m³).",
     "status": "similar",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -185,9 +185,9 @@
     "project": "air-check",
     "id": "IT2270A",
     "title": "Air Check · Napoli",
-    "description": "PM2.5 forecast for tomorrow: 5.9 µg/m³. Last 365 days: the rule 'tomorrow = today' beats the forecast (error 6.61 vs 4.47 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 4.9 µg/m³. Last 365 days: the rule 'tomorrow = today' beats the forecast (error 6.55 vs 4.53 µg/m³).",
     "status": "worse",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -204,9 +204,9 @@
     "project": "air-check",
     "id": "IT1696A",
     "title": "Air Check · Bolzano",
-    "description": "PM2.5 forecast for tomorrow: 22.3 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 5.63 vs 4.82 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 18.5 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 5.64 vs 4.83 µg/m³).",
     "status": "similar",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -223,9 +223,9 @@
     "project": "air-check",
     "id": "FR04055",
     "title": "Air Check · Paris",
-    "description": "PM2.5 forecast for tomorrow: 5.0 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 3.77 vs 5.01 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 5.4 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 3.76 vs 5.0 µg/m³).",
     "status": "better",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -242,9 +242,9 @@
     "project": "air-check",
     "id": "FR20062",
     "title": "Air Check · Lyon",
-    "description": "PM2.5 forecast for tomorrow: 3.0 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 3.67 vs 5.6 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 5.2 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 3.67 vs 5.61 µg/m³).",
     "status": "better",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -261,9 +261,9 @@
     "project": "air-check",
     "id": "FR03043",
     "title": "Air Check · Marseille",
-    "description": "PM2.5 forecast for tomorrow: 3.5 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 2.5 vs 3.32 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 4.9 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 2.5 vs 3.32 µg/m³).",
     "status": "better",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -280,9 +280,9 @@
     "project": "air-check",
     "id": "FR15038",
     "title": "Air Check · Grenoble",
-    "description": "PM2.5 forecast for tomorrow: 3.8 µg/m³. Last 365 days: the rule 'tomorrow = today' beats the forecast (error 5.62 vs 4.37 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 7.6 µg/m³. Last 365 days: the rule 'tomorrow = today' beats the forecast (error 5.62 vs 4.38 µg/m³).",
     "status": "worse",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -299,9 +299,9 @@
     "project": "air-check",
     "id": "FR42010",
     "title": "Air Check · Strasbourg",
-    "description": "PM2.5 forecast for tomorrow: 7.9 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 5.81 vs 5.7 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 3.5 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 5.82 vs 5.7 µg/m³).",
     "status": "similar",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -318,9 +318,9 @@
     "project": "air-check",
     "id": "FR12030",
     "title": "Air Check · Toulouse",
-    "description": "PM2.5 forecast for tomorrow: 5.5 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 3.55 vs 4.19 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 4.0 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 3.44 vs 4.08 µg/m³).",
     "status": "better",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -337,9 +337,9 @@
     "project": "air-check",
     "id": "FR31007",
     "title": "Air Check · Bordeaux",
-    "description": "PM2.5 forecast for tomorrow: 5.6 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 5.1 vs 5.67 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 4.8 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 5.08 vs 5.65 µg/m³).",
     "status": "similar",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -356,9 +356,9 @@
     "project": "air-check",
     "id": "FR33201",
     "title": "Air Check · Annecy",
-    "description": "PM2.5 forecast for tomorrow: 5.9 µg/m³. Last 365 days: the rule 'tomorrow = today' beats the forecast (error 4.81 vs 3.96 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 3.7 µg/m³. Last 365 days: the rule 'tomorrow = today' beats the forecast (error 4.61 vs 3.9 µg/m³).",
     "status": "worse",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -375,9 +375,9 @@
     "project": "air-check",
     "id": "CH0010A",
     "title": "Air Check · Zürich",
-    "description": "PM2.5 forecast for tomorrow: 10.2 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 5.29 vs 5.36 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 2.2 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 5.29 vs 5.36 µg/m³).",
     "status": "similar",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -394,9 +394,9 @@
     "project": "air-check",
     "id": "CH0008A",
     "title": "Air Check · Basel",
-    "description": "PM2.5 forecast for tomorrow: 7.5 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 4.42 vs 4.09 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 2.2 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 4.42 vs 4.1 µg/m³).",
     "status": "similar",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -413,9 +413,9 @@
     "project": "air-check",
     "id": "CH0011A",
     "title": "Air Check · Lugano",
-    "description": "PM2.5 forecast for tomorrow: 18.5 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 5.51 vs 5.18 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 11.4 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 5.52 vs 5.18 µg/m³).",
     "status": "similar",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -432,9 +432,9 @@
     "project": "air-check",
     "id": "NO0108A",
     "title": "Air Check · Bergen",
-    "description": "PM2.5 forecast for tomorrow: 3.7 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 2.61 vs 2.93 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 4.5 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 2.61 vs 2.93 µg/m³).",
     "status": "similar",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -451,9 +451,9 @@
     "project": "air-check",
     "id": "SE0004A",
     "title": "Air Check · Göteborg",
-    "description": "PM2.5 forecast for tomorrow: 6.3 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 3.47 vs 3.79 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 6.9 µg/m³. Last 365 days: forecast and the rule 'tomorrow = today' are about equal (error 3.48 vs 3.79 µg/m³).",
     "status": "similar",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -470,9 +470,9 @@
     "project": "air-check",
     "id": "SE0001A",
     "title": "Air Check · Malmö",
-    "description": "PM2.5 forecast for tomorrow: 7.9 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 2.61 vs 4.05 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 4.2 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 2.61 vs 4.05 µg/m³).",
     "status": "better",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -489,9 +489,9 @@
     "project": "air-check",
     "id": "FI00425",
     "title": "Air Check · Helsinki",
-    "description": "PM2.5 forecast for tomorrow: 3.1 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 2.58 vs 3.86 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 7.3 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 2.58 vs 3.86 µg/m³).",
     "status": "better",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -508,9 +508,9 @@
     "project": "air-check",
     "id": "FI00801",
     "title": "Air Check · Tampere",
-    "description": "PM2.5 forecast for tomorrow: 2.7 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 2.18 vs 3.27 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 4.5 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 2.18 vs 3.27 µg/m³).",
     "status": "better",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   },
@@ -527,9 +527,9 @@
     "project": "air-check",
     "id": "FI00027",
     "title": "Air Check · Oulu",
-    "description": "PM2.5 forecast for tomorrow: 1.6 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 1.84 vs 2.18 µg/m³).",
+    "description": "PM2.5 forecast for tomorrow: 3.5 µg/m³. Last 365 days: forecast beats the rule 'tomorrow = today' (error 1.83 vs 2.17 µg/m³).",
     "status": "better",
-    "updated": "2026-11-14",
+    "updated": "2026-11-15",
     "url": "https://geoworldlook.github.io/air-check/showcase/aircheck_panel.html"
    }
   }
