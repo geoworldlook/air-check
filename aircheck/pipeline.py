@@ -247,6 +247,8 @@ def evaluate(st: pd.DataFrame, obs: pd.DataFrame, arch: pd.DataFrame, live: pd.D
             "archive_winter": core.scores(winter, config.THRESHOLD),
             "live": {**sl, "skill_ci": [llo, lhi], "verdict": core.verdict(sl, llo, lhi, config.MIN_PAIRS)},
             "years": years, "chart": chart,
+            "latest_obs": {"date": o.index.max().strftime("%Y-%m-%d") if len(o) else None,
+                           "pm25": _num(o.iloc[-1]) if len(o) else None},
             "qc": {"last_obs": o.index.max().strftime("%Y-%m-%d") if len(o) else None,
                    "missing_last30": int(30 - len(last30)), "stuck_days": int(stuck.get(sid, 0))},
         })

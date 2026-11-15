@@ -31,13 +31,16 @@ def map_points(result: Dict) -> Dict:
     for s in result["stations"]:
         a = s["archive_365"]
         tom = s["forecast"]["tomorrow"]
-        desc = (f"PM2.5 forecast for tomorrow: {tom if tom is not None else 'n/a'} µg/m³. "
-                f"Last 365 days: {WORDS[a['verdict']]}"
+        last = s.get("latest_obs") or {}
+        desc = ((f"Measured at the station on {last['date']}: {last['pm25']} µg/m³ PM2.5. " if last.get("pm25") is not None else "")
+                + f"Forecast for tomorrow: {tom if tom is not None else 'n/a'} µg/m³. "
+                + f"Last 365 days: {WORDS[a['verdict']]}"
                 + (f" (error {a['rmse_fc']} vs {a['rmse_pers']} µg/m³)." if a.get("n") else "."))
         feats.append({"type": "Feature", "geometry": {"type": "Point", "coordinates": [s["lon"], s["lat"]]},
                       "properties": {"project": "air-check", "id": s["id"], "title": f"Air Check · {s['city']}",
                                      "description": desc, "status": a["verdict"], "updated": result["run_date"],
-                                     "url": PANEL_URL}})
+                                     "reading": last.get("pm25"), "reading_unit": "µg/m³ PM2.5",
+                                     "reading_date": last.get("date"), "forecast_tomorrow": tom, "url": PANEL_URL}})
     return {"type": "FeatureCollection", "features": feats}
 
 

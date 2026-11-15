@@ -154,6 +154,8 @@ function detail(){
     '<div style="margin:10px 0 2px"><span class="big">' + f1(fc.tomorrow) + '</span> <span class="unit">µg/m³ forecast for tomorrow' +
     (fc.tomorrow !== null && fc.tomorrow > T ? ' · <b style="color:#b23a2e">high-PM day</b>' : '') + '</span></div>' +
     '<div class="muted small">today ' + f1(fc.today) + ' · day after tomorrow ' + f1(fc.day2) + ' · issued ' + fc.issued + '</div>' +
+    (s.latest_obs && s.latest_obs.pm25 !== null ? '<div class="small" style="margin-top:4px"><b>' + f1(s.latest_obs.pm25) +
+      ' µg/m³</b> measured at the station on ' + s.latest_obs.date + ' (daily mean)</div>' : '') +
     '<h3>How far to trust it here</h3><p style="margin:0 0 6px">' + words + '</p>';
   if (a.n) h += '<div class="kv"><div>Days compared (last 365)</div><div>' + a.n + '</div>' +
     '<div>Forecast error (RMSE)</div><div>' + f1(a.rmse_fc) + ' µg/m³</div>' +
