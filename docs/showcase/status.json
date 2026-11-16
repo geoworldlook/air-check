@@ -1,7 +1,7 @@
 {
  "project": "air-check",
- "updated": "2026-11-15T18:00Z",
- "run_date": "2026-11-15",
+ "updated": "2026-11-16T13:47Z",
+ "run_date": "2026-11-16",
  "gate": {
   "passed": true,
   "fresh_stations": 26,
@@ -26,9 +26,9 @@
    "worse": 7,
    "insufficient": 0
   },
-  "live_pairs_max": 0,
+  "live_pairs_max": 1,
   "first_issue": "2026-11-14",
-  "model_run": "2026-11-15T00:00Z"
+  "model_run": "2026-11-16T00:00Z"
  },
  "test": {
   "window": [
