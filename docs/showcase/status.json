@@ -1,30 +1,52 @@
 {
  "project": "air-check",
- "updated": "2026-11-16T13:47Z",
+ "updated": "2026-11-16T17:53Z",
  "run_date": "2026-11-16",
  "gate": {
   "passed": true,
   "fresh_stations": 26,
-  "stations": 28,
-  "forecast_stations": 28,
+  "stations": 27,
+  "forecast_stations": 27,
   "problems": []
  },
  "summary": {
-  "stations": 28,
+  "stations": 27,
   "countries": [
    "CH",
    "FI",
    "FR",
    "IT",
-   "NO",
    "PL",
    "SE"
   ],
   "archive_365": {
    "better": 9,
-   "similar": 12,
+   "similar": 11,
    "worse": 7,
    "insufficient": 0
+  },
+  "corrected_365": {
+   "better": 27,
+   "similar": 0,
+   "worse": 0,
+   "insufficient": 0
+  },
+  "holdout": {
+   "period": [
+    "2025-11-16",
+    "2026-11-15"
+   ],
+   "stations": 27,
+   "raw_beats_persistence": 13,
+   "corrected_beats_persistence": 27,
+   "corrected_beats_raw": 27,
+   "median_skill_raw": -0.025,
+   "median_skill_corrected": 0.46,
+   "median_rmse_raw": 5.48,
+   "median_rmse_corrected": 3.95,
+   "median_rmse_persistence": 5.16,
+   "H-A3": "confirmed",
+   "H-A4": "confirmed"
   },
   "live_pairs_max": 1,
   "first_issue": "2026-11-14",
@@ -53,6 +75,25 @@
    "stations": 0,
    "better": 0,
    "needed": "more than half, at least 5 stations",
+   "status": "in progress"
+  }
+ },
+ "test_a2": {
+  "window": [
+   "2026-11-18",
+   "2027-02-15"
+  ],
+  "days_elapsed": 0,
+  "days_total": 90,
+  "final": false,
+  "H-A3": {
+   "stations": 0,
+   "better": 0,
+   "status": "in progress"
+  },
+  "H-A4": {
+   "stations": 0,
+   "better": 0,
    "status": "in progress"
   }
  }
