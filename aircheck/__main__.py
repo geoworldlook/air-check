@@ -92,9 +92,11 @@ def main(argv=None) -> int:
         from . import registry
         d = registry.build()
         print(d["status"].value_counts().to_dict())
-        if a.write:
-            d.to_csv(registry.STATIONS_CSV, index=False, encoding="utf-8")
-            print(f"zapisano {registry.STATIONS_CSV}")
+        print(d.loc[d["status"] == "excluded", ["country", "city", "reason"]].to_string(index=False))
+        if a.write:                                         # rejestr zawiera tylko stacje przyjęte
+            keep = d[d["status"] == "accepted"].drop(columns=["reason"])
+            keep.to_csv(registry.STATIONS_CSV, index=False, encoding="utf-8", lineterminator="\n")
+            print(f"zapisano {registry.STATIONS_CSV} ({len(keep)} stacji)")
         return 0
     return 1
 

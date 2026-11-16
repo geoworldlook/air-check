@@ -23,6 +23,13 @@ CHART_DAYS = 120
 PROTOCOL = Path("docs") / "evidence" / "A1_protokol_prognozy.md"
 PROTOCOL_SHA256 = "8e2999e3ad8fac92973575ba5a234f4448dfbab378c05e4dc50ccd4bf3fee268"
 
+# Protokół A2: skorygowana prognoza (regresja MOS), metoda zamrożona
+MOS_WINDOW = 365                # dni wstecz do dopasowania regresji
+HOLDOUT = ("2025-11-16", "2026-11-15")   # okres odłożony, oceniany raz
+LIVE_TEST_A2_START = "2026-11-18"
+PROTOCOL_A2 = Path("docs") / "evidence" / "A2_protokol_korekta.md"
+PROTOCOL_A2_SHA256 = "45a8fce0a7aa5bee6b5a865996604b97d3b29dc81aa0461170a0d230ed8f9c90"
+
 
 @dataclass(frozen=True)
 class Paths:

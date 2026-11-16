@@ -3,7 +3,9 @@
 Reguła wyboru (zapisana, powtarzalna): dla każdego miasta z CITIES bierzemy punkty pomiarowe PM2.5 w promieniu
 RADIUS_KM od centrum, typu „background”, w obszarze miejskim lub podmiejskim, które mają plik w zbiorze
 zweryfikowanym i w zbiorze bieżącym. Wygrywa stacja o najwyższej najmniejszej rocznej kompletności dni
-(2022 – bieżący rok). Miasto wchodzi do rejestru, gdy ta kompletność wynosi co najmniej MIN_COVERAGE procent.
+(2022 – bieżący rok). Miasto wchodzi do rejestru, gdy ta kompletność wynosi co najmniej MIN_COVERAGE procent
+i gdy stacja ma dane bieżące: co najmniej MIN_RECENT procent dni z ostatnich RECENT_DAYS dni.
+Plik stations.csv zawiera tylko stacje przyjęte; lista miast odrzuconych z powodami jest w docs/evidence/.
 """
 
 from __future__ import annotations
@@ -22,6 +24,7 @@ from .sources import eea
 
 STATIONS_CSV = Path(__file__).resolve().parent / "stations.csv"
 RADIUS_KM, RADIUS_BIG_KM, MIN_COVERAGE, MAX_CANDIDATES = 15.0, 20.0, 75, 6
+RECENT_DAYS, MIN_RECENT = 90, 75
 ISO = {"PL": "Poland", "IT": "Italy", "FR": "France", "CH": "Switzerland", "NO": "Norway", "SE": "Sweden",
        "DK": "Denmark", "FI": "Finland"}
 # (kraj, miasto, szerokość, długość, duża aglomeracja)
@@ -123,12 +126,13 @@ def build(today: dt.date | None = None, log=print) -> pd.DataFrame:
             s = s[~s.index.duplicated()].sort_index()
             cov = coverage(s.index, today)
             score = min(cov.values())
+            recent = int(round(100 * int((s.index > pd.Timestamp(today) - pd.Timedelta(days=RECENT_DAYS + 1)).sum()) / RECENT_DAYS))
             kv, ku = picked[eea.VERIFIED][1], picked[eea.UTD][1]
             rec = dict(id=code, country=cc, city=city, name=str(r["Air Quality Station Name"]).strip('"'),
                        sampling_point=f"{pts.loc[kv, 'Sampling Point Id']} | {pts.loc[ku, 'Sampling Point Id']}",
                        lat=round(float(r["Latitude"]), 5), lon=round(float(r["Longitude"]), 5),
                        area=r["Air Quality Station Area"], type=r["Air Quality Station Type"],
-                       km_from_centre=round(float(r["km"]), 1), **{f"cov{y}": c for y, c in cov.items()}, min_cov=score,
+                       km_from_centre=round(float(r["km"]), 1), **{f"cov{y}": c for y, c in cov.items()}, min_cov=score, recent=recent,
                        url_verified=urls[(cc, eea.VERIFIED)][kv], url_utd=urls[(cc, eea.UTD)][ku])
             if best is None or score > best["min_cov"]:
                 best = rec
@@ -139,9 +143,10 @@ def build(today: dt.date | None = None, log=print) -> pd.DataFrame:
                              reason=f"brak stacji tła z danymi w promieniu {radius:.0f} km (kandydatów {len(cand)})"))
             log(f"{cc} {city}: brak")
             continue
-        ok = best["min_cov"] >= MIN_COVERAGE
+        ok = best["min_cov"] >= MIN_COVERAGE and best["recent"] >= MIN_RECENT
         best["status"] = "accepted" if ok else "excluded"
-        best["reason"] = "" if ok else f"kompletność {best['min_cov']}% < {MIN_COVERAGE}%"
+        best["reason"] = "" if ok else (f"kompletność {best['min_cov']}% < {MIN_COVERAGE}%" if best["min_cov"] < MIN_COVERAGE
+                                         else f"dane bieżące: {best['recent']}% dni z ostatnich {RECENT_DAYS} < {MIN_RECENT}%")
         rows.append(best)
         log(f"{cc} {city}: {best['id']} {best['name']} ({best['km_from_centre']} km) min {best['min_cov']}% "
             f"-> {best['status']}")

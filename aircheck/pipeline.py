@@ -141,6 +141,7 @@ def update_live(st: pd.DataFrame, P: config.Paths, src: Sources, today: dt.date,
     fc = fc[["issue_date", "date", "lead", "station", "pm25", "model_run"]]
     d = pd.concat([fc] + ([old] if len(old) else []), ignore_index=True)
     d = d.drop_duplicates(["issue_date", "date", "station"], keep="first")
+    d = d[d["station"].isin(set(st["id"]))]
     write_table(d, P.forecast, "live", "issue_date", ["issue_date", "station", "date"])
     log(f"prognoza na żywo: wydanie {today}, wierszy dziś {len(fc)}, razem {len(d)}")
     return d
