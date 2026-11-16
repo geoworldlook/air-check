@@ -36,16 +36,16 @@ def main() -> int:
     obs = pipeline.read_table(P.obs, "obs", ["date"])
     arch = pipeline.read_table(P.forecast, "archive", ["date"])
     good = obs[(obs["stuck"] == 0) & obs["pm25"].notna()]
-    O = good.pivot_table(index="date", columns="station", values="pm25", aggfunc="first")
-    F = arch.pivot_table(index="date", columns="station", values="pm25", aggfunc="first")
+    obs_t = good.pivot_table(index="date", columns="station", values="pm25", aggfunc="first")
+    fc_t = arch.pivot_table(index="date", columns="station", values="pm25", aggfunc="first")
     rows = []
     for name, fn in correct.CANDIDATES.items():
         skills, wins, n = [], 0, 0
         for sid in st["id"]:
-            if sid not in O or sid not in F:
+            if sid not in obs_t or sid not in fc_t:
                 continue
-            idx = pd.date_range(F.index.min(), pd.Timestamp(DEV_END))
-            o, f = O[sid].reindex(idx), F[sid].reindex(idx)
+            idx = pd.date_range(fc_t.index.min(), pd.Timestamp(DEV_END))
+            o, f = obs_t[sid].reindex(idx), fc_t[sid].reindex(idx)
             c = fn(o, f, lag=1)
             x = core.paired(o, c)
             x = x[x.index >= pd.Timestamp("2024-03-01")]          # pierwsze miesiące to rozruch metod z długim oknem

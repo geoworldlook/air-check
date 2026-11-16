@@ -21,7 +21,11 @@ Zapisana w `aircheck/registry.py`. Dla każdego miasta:
 4. wygrywa stacja o najwyższej najmniejszej rocznej kompletności dni 2022–2026;
 5. miasto wchodzi do rejestru przy kompletności co najmniej 75% w każdym roku.
 
-## 3. Wynik: 28 z 47 miast
+## 3. Wynik: 28 z 47 miast (od 2026-11-16: 27)
+
+Od 2026-11-16 reguła ma dodatkowy warunek: co najmniej 75% dni z ostatnich 90 dni. Bergen go nie spełnia
+(43 z 90 dni) i został usunięty; Norwegia nie ma już stacji w rejestrze. Plik `stations.csv` zawiera tylko
+stacje przyjęte. Tabela poniżej pokazuje stan z 2026-11-14.
 
 | Kraj | Kandydaci | Przyjęte | Odrzucone i powód |
 |---|---|---|---|

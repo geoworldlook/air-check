@@ -17,7 +17,7 @@ def paired(obs: pd.Series, fc: pd.Series) -> pd.DataFrame:
     obs = obs.dropna()
     fc = fc.dropna()
     if obs.empty or fc.empty:
-        return pd.DataFrame(columns=["o", "f", "p"])
+        return pd.DataFrame(columns=["o", "f", "p"], index=pd.DatetimeIndex([], name="date"), dtype=float)
     prev = pd.Series(obs.values, index=obs.index + pd.Timedelta(days=1))
     x = pd.DataFrame({"o": obs, "f": fc, "p": prev}).dropna()
     x.index.name = "date"

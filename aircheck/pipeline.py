@@ -17,7 +17,7 @@ from typing import Callable, Dict, List, Optional
 
 import pandas as pd
 
-from . import config, core, publish, registry
+from . import config, core, correct, publish, registry
 from .sources import cams, eea
 
 
@@ -139,12 +139,54 @@ def update_live(st: pd.DataFrame, P: config.Paths, src: Sources, today: dt.date,
     fc = fc[(fc["lead"] >= 0) & (fc["lead"] <= 3)]
     fc["model_run"] = src.model_run() or ""
     fc = fc[["issue_date", "date", "lead", "station", "pm25", "model_run"]]
+    if len(old) and "pm25_corr" not in old:
+        old["pm25_corr"] = float("nan")
+    fc["pm25_corr"] = float("nan")
+    if len(old):                                             # ponowny przebieg tego samego dnia zachowuje zapisaną korektę
+        key = ["issue_date", "date", "station"]
+        fc = fc.drop(columns="pm25_corr").merge(old[key + ["pm25_corr"]], on=key, how="left")
     d = pd.concat([fc] + ([old] if len(old) else []), ignore_index=True)
     d = d.drop_duplicates(["issue_date", "date", "station"], keep="first")
     d = d[d["station"].isin(set(st["id"]))]
     write_table(d, P.forecast, "live", "issue_date", ["issue_date", "station", "date"])
     log(f"prognoza na żywo: wydanie {today}, wierszy dziś {len(fc)}, razem {len(d)}")
     return d
+
+
+def _series(obs: pd.DataFrame, arch: pd.DataFrame):
+    good = obs[(obs["stuck"] == 0) & obs["pm25"].notna()]
+    o_all = good.pivot_table(index="date", columns="station", values="pm25", aggfunc="first")
+    f_arch = arch.pivot_table(index="date", columns="station", values="pm25", aggfunc="first")
+    return o_all, f_arch
+
+
+def add_live_correction(st: pd.DataFrame, P: config.Paths, obs: pd.DataFrame, arch: pd.DataFrame, live: pd.DataFrame,
+                        log: Callable) -> pd.DataFrame:
+    """Skorygowana prognoza na jutro (protokół A2), zapisana obok surowej w kolumnie pm25_corr.
+    Dla dnia docelowego D regresja używa pomiarów najpóźniej z dnia D-2 (lag = 2), czyli tylko tego, co było znane
+    w dniu wydania. Uczy się na prognozach z archiwum; tam, gdzie są już prognozy zapisane na żywo, bierze je."""
+    if "pm25_corr" not in live:
+        live["pm25_corr"] = float("nan")
+    todo = live[(live["lead"] == 1) & live["pm25_corr"].isna()]
+    if todo.empty:
+        return live
+    o_all, f_arch = _series(obs, arch)
+    l1 = live[live["lead"] == 1].pivot_table(index="date", columns="station", values="pm25", aggfunc="first")
+    filled = 0
+    for sid in todo["station"].unique():
+        if sid not in o_all or sid not in f_arch:
+            continue
+        idx = pd.date_range(f_arch.index.min(), todo["date"].max())
+        f = f_arch[sid].reindex(idx)
+        if sid in l1:
+            f = l1[sid].reindex(idx).combine_first(f)
+        c = correct.mos(o_all[sid].reindex(idx), f, lag=2, window=config.MOS_WINDOW)
+        rows = todo[todo["station"] == sid]
+        live.loc[rows.index, "pm25_corr"] = c.reindex(rows["date"]).round(2).values
+        filled += len(rows)
+    write_table(live, P.forecast, "live", "issue_date", ["issue_date", "station", "date"])
+    log(f"korekta prognozy na jutro: uzupełniono {filled} wierszy")
+    return live
 
 
 def gate(st: pd.DataFrame, obs: pd.DataFrame, live: pd.DataFrame, today: dt.date) -> Dict:
@@ -202,6 +244,35 @@ def _hypotheses(per_station: Dict[str, pd.DataFrame], today: dt.date) -> Dict:
             "days_total": config.LIVE_TEST_DAYS, "final": bool(done), "H-A1": h1, "H-A2": h2}
 
 
+def _share_status(k: int, n: int, final: bool = True) -> str:
+    if not final:
+        return "in progress"
+    return "not testable" if n == 0 else ("confirmed" if k / n >= 2 / 3 else "not confirmed")
+
+
+def _hypotheses_a2(corr: Dict[str, pd.DataFrame], raw: Dict[str, pd.DataFrame], today: dt.date) -> Dict:
+    """Test na żywo protokołu A2: skorygowana prognoza na jutro wobec reguły (H-A3) i wobec prognozy surowej (H-A4)."""
+    a = pd.Timestamp(config.LIVE_TEST_A2_START)
+    b = a + pd.Timedelta(days=config.LIVE_TEST_DAYS - 1)
+    done = pd.Timestamp(today) > b + pd.Timedelta(days=7)
+    n = k3 = k4 = 0
+    for sid, x in corr.items():
+        w = x[(x.index >= a) & (x.index <= b)]
+        r = raw.get(sid, x.iloc[0:0])
+        r = r[(r.index >= a) & (r.index <= b)]
+        if len(w) < config.MIN_PAIRS or len(r) < config.MIN_PAIRS:
+            continue
+        sc, sr = core.scores(w, config.THRESHOLD), core.scores(r, config.THRESHOLD)
+        n += 1
+        k3 += int(sc["rmse_fc"] < sc["rmse_pers"])
+        k4 += int(sc["rmse_fc"] < sr["rmse_fc"])
+    return {"window": [a.strftime("%Y-%m-%d"), b.strftime("%Y-%m-%d")],
+            "days_elapsed": int(min(config.LIVE_TEST_DAYS, max(0, (pd.Timestamp(today) - a).days))),
+            "days_total": config.LIVE_TEST_DAYS, "final": bool(done),
+            "H-A3": {"stations": n, "better": k3, "status": _share_status(k3, n, done)},
+            "H-A4": {"stations": n, "better": k4, "status": _share_status(k4, n, done)}}
+
+
 def evaluate(st: pd.DataFrame, obs: pd.DataFrame, arch: pd.DataFrame, live: pd.DataFrame, today: dt.date,
              gate_info: Dict) -> Dict:
     """Wynik do publikacji: miary dla każdej stacji, podsumowanie, stan testu potwierdzającego."""
@@ -209,6 +280,12 @@ def evaluate(st: pd.DataFrame, obs: pd.DataFrame, arch: pd.DataFrame, live: pd.D
     o_all = good.pivot_table(index="date", columns="station", values="pm25", aggfunc="first")
     f_arch = arch.pivot_table(index="date", columns="station", values="pm25", aggfunc="first")
     l1 = live[live["lead"] == 1].pivot_table(index="date", columns="station", values="pm25", aggfunc="first")
+    if "pm25_corr" not in live:
+        live = live.assign(pm25_corr=float("nan"))
+    l1c = live[(live["lead"] == 1) & live["pm25_corr"].notna()].pivot_table(index="date", columns="station",
+                                                                             values="pm25_corr", aggfunc="first")
+    h0, h1 = pd.Timestamp(config.HOLDOUT[0]), pd.Timestamp(config.HOLDOUT[1])
+    live_corr_pairs: Dict[str, pd.DataFrame] = {}
     last_issue = live["issue_date"].max()
     latest = live[live["issue_date"] == last_issue]
     stuck = obs[obs["stuck"] == 1].groupby("station").size()
@@ -226,6 +303,20 @@ def evaluate(st: pd.DataFrame, obs: pd.DataFrame, arch: pd.DataFrame, live: pd.D
         sl = core.scores(xl, config.THRESHOLD)
         llo, lhi = core.skill_ci(xl, config.BOOT_BLOCK, config.BOOT_REPS, config.BOOT_SEED)
         winter = xa[xa.index.month.isin([11, 12, 1, 2, 3])]
+        # prognoza skorygowana (protokół A2): regresja MOS, współczynniki tylko z dni wcześniejszych
+        if sid in f_arch and len(o):
+            idx_all = pd.date_range(f_arch.index.min(), yesterday)
+            c_arch = correct.mos(o.reindex(idx_all), f_arch[sid].reindex(idx_all), lag=1, window=config.MOS_WINDOW)
+        else:
+            c_arch = pd.Series(dtype=float)
+        xc = core.paired(o, c_arch)
+        xc365 = _win(xc, today, 365)
+        c365 = core.scores(xc365, config.THRESHOLD)
+        clo, chi = core.skill_ci(xc365, config.BOOT_BLOCK, config.BOOT_REPS, config.BOOT_SEED)
+        raw_h = core.scores(xa[(xa.index >= h0) & (xa.index <= h1)], config.THRESHOLD)
+        cor_h = core.scores(xc[(xc.index >= h0) & (xc.index <= h1)], config.THRESHOLD)
+        xlc = core.paired(o, l1c[sid]) if sid in l1c else core.paired(o, pd.Series(dtype=float))
+        live_corr_pairs[sid] = xlc
         years = []
         for y in range(pd.Timestamp(config.START).year, today.year + 1):
             oy = o[o.index.year == y]
@@ -234,14 +325,20 @@ def evaluate(st: pd.DataFrame, obs: pd.DataFrame, arch: pd.DataFrame, live: pd.D
         chart = {"dates": [d.strftime("%Y-%m-%d") for d in idx],
                  "obs": _vals(o.reindex(idx)),
                  "fc": _vals(f_arch[sid].reindex(idx)) if sid in f_arch else [None] * len(idx),
-                 "fc_live": _vals(l1[sid].reindex(idx)) if sid in l1 else [None] * len(idx)}
+                 "fc_live": _vals(l1[sid].reindex(idx)) if sid in l1 else [None] * len(idx),
+                 "fc_corr": _vals(c_arch.reindex(idx)) if len(c_arch) else [None] * len(idx)}
         nxt = latest[latest["station"] == sid].set_index("lead")["pm25"]
+        nxc = latest[latest["station"] == sid].set_index("lead")["pm25_corr"]
         last30 = o[(o.index > yesterday - pd.Timedelta(days=30)) & (o.index <= yesterday)]
         stations.append({
             "id": sid, "country": s["country"], "city": s["city"], "name": s["name"], "lat": float(s["lat"]),
             "lon": float(s["lon"]),
             "forecast": {"issued": last_issue.strftime("%Y-%m-%d") if pd.notna(last_issue) else None,
-                         "today": _num(nxt.get(0)), "tomorrow": _num(nxt.get(1)), "day2": _num(nxt.get(2))},
+                         "today": _num(nxt.get(0)), "tomorrow": _num(nxt.get(1)), "day2": _num(nxt.get(2)),
+                         "tomorrow_corrected": _num(nxc.get(1))},
+            "corrected_365": {**c365, "skill_ci": [clo, chi], "verdict": core.verdict(c365, clo, chi, config.MIN_PAIRS)},
+            "holdout": {"raw": raw_h, "corrected": cor_h},
+            "live_corrected": core.scores(xlc, config.THRESHOLD),
             "archive_365": {**s365, "skill_ci": [lo, hi], "verdict": core.verdict(s365, lo, hi, config.MIN_PAIRS)},
             "archive_30": core.scores(_win(xa, today, 30), config.THRESHOLD),
             "archive_all": core.scores(xa, config.THRESHOLD),
@@ -254,16 +351,35 @@ def evaluate(st: pd.DataFrame, obs: pd.DataFrame, arch: pd.DataFrame, live: pd.D
                    "missing_last30": int(30 - len(last30)), "stuck_days": int(stuck.get(sid, 0))},
         })
     verdicts = [s["archive_365"]["verdict"] for s in stations]
+    cverd = [s["corrected_365"]["verdict"] for s in stations]
+    hs = [s["holdout"] for s in stations if s["holdout"]["raw"].get("n", 0) >= config.MIN_PAIRS
+          and s["holdout"]["corrected"].get("n", 0) >= config.MIN_PAIRS]
+    k_cp = sum(h["corrected"]["rmse_fc"] < h["corrected"]["rmse_pers"] for h in hs)
+    k_cr = sum(h["corrected"]["rmse_fc"] < h["raw"]["rmse_fc"] for h in hs)
+    k_rp = sum(h["raw"]["rmse_fc"] < h["raw"]["rmse_pers"] for h in hs)
+
+    def med(key: str, part: str) -> Optional[float]:
+        return round(float(pd.Series([h[part][key] for h in hs]).median()), 3) if hs else None
+
+    holdout = {"period": list(config.HOLDOUT), "stations": len(hs),
+               "raw_beats_persistence": int(k_rp), "corrected_beats_persistence": int(k_cp),
+               "corrected_beats_raw": int(k_cr), "median_skill_raw": med("skill", "raw"),
+               "median_skill_corrected": med("skill", "corrected"), "median_rmse_raw": med("rmse_fc", "raw"),
+               "median_rmse_corrected": med("rmse_fc", "corrected"), "median_rmse_persistence": med("rmse_pers", "raw"),
+               "H-A3": _share_status(int(k_cp), len(hs)), "H-A4": _share_status(int(k_cr), len(hs))}
     summary = {
         "stations": len(stations), "countries": sorted({s["country"] for s in stations}),
         "archive_365": {v: verdicts.count(v) for v in ("better", "similar", "worse", "insufficient")},
+        "corrected_365": {v: cverd.count(v) for v in ("better", "similar", "worse", "insufficient")},
+        "holdout": holdout,
         "live_pairs_max": int(max([len(x) for x in live_pairs.values()] or [0])),
         "first_issue": live["issue_date"].min().strftime("%Y-%m-%d") if len(live) else None,
         "model_run": str(latest["model_run"].iloc[0]) if len(latest) else "",
     }
     return {"project": "air-check", "updated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
             "run_date": today.isoformat(), "threshold": config.THRESHOLD, "gate": gate_info, "summary": summary,
-            "test": _hypotheses(live_pairs, today), "stations": stations}
+            "test": _hypotheses(live_pairs, today), "test_a2": _hypotheses_a2(live_corr_pairs, live_pairs, today),
+            "stations": stations}
 
 
 def _num(v) -> Optional[float]:
@@ -300,6 +416,11 @@ def run(root: str | Path | None = None, today: dt.date | None = None, backfill: 
                 raise
             status["warnings"] = [f"archiwum prognoz nieodświeżone: {e}"]
             log(f"uwaga: archiwum prognoz nieodświeżone ({e}); używam zapisanego, do {arch['date'].max().date()}")
+        try:
+            live = add_live_correction(st, P, obs, arch, live, log)
+        except Exception as e:                               # brak korekty nie zatrzymuje przebiegu
+            status.setdefault("warnings", []).append(f"korekta prognozy nie policzona: {e}")
+            log(f"uwaga: korekta prognozy nie policzona ({e})")
         g = gate(st, obs, live, today)
         status["gate"] = g
         if not g["passed"]:
@@ -330,6 +451,7 @@ def render(root: str | Path | None = None, today: dt.date | None = None, station
         log("brak tabel w data/: najpierw `python -m aircheck backfill`")
         return 1
     today = today or live["issue_date"].max().date()
+    live = add_live_correction(st, P, obs, arch, live, log)
     publish.write_all(P, evaluate(st, obs, arch, live, today, gate(st, obs, live, today)))
     log(f"panel przeliczony na dzień {today}: {P.showcase}")
     return 0

@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from . import config, core, pipeline, registry
+from . import config, core, correct, pipeline, registry
 from .sources import cams, eea
 
 TODAY = dt.date(2026, 11, 14)
@@ -123,6 +123,23 @@ def unit_tests() -> None:
     check(a == b and a[0] < a[1], "bootstrap blokowy powtarzalny")
     check(registry.coverage(pd.date_range("2022-01-01", "2022-12-31"), dt.date(2023, 7, 1)) == {2022: 100, 2023: 0},
           "kompletność roczna")
+    # korekta prognozy: stały błąd +10 znika, a korekta nie zagląda w przyszłość
+    idx = pd.date_range("2025-01-01", periods=200)
+    truth = pd.Series(_truth("XX0001A", idx), index=idx)
+    fc = truth + 10.0
+    for name, fn in (("bias", correct.bias), ("kalman", correct.kalman), ("mos", correct.mos)):
+        c = fn(truth, fc, 1)
+        err_raw, err_cor = float((fc - truth).iloc[60:].abs().mean()), float((c - truth).iloc[60:].abs().mean())
+        check(err_cor < 0.2 * err_raw, f"korekta {name}: stały błąd prognozy usunięty")
+    a = correct.mos(truth, fc, 1)
+    changed = truth.copy()
+    changed.iloc[150:] += 50.0                               # zmiana przyszłych pomiarów nie może zmienić przeszłych korekt
+    b = correct.mos(changed, fc, 1)
+    check(np.allclose(a.iloc[:150], b.iloc[:150]), "korekta jest przyczynowa: przeszłość nie zależy od przyszłości")
+    c2 = correct.mos(truth, fc, 2)
+    changed2 = truth.copy()
+    changed2.iloc[149] += 50.0
+    check(np.isclose(c2.iloc[150], correct.mos(changed2, fc, 2).iloc[150]), "lag = 2: pomiar z wczoraj nie wpływa na dzisiejszą korektę")
 
 
 def repo_checks() -> None:
@@ -137,6 +154,8 @@ def repo_checks() -> None:
     proto = config.ROOT / config.PROTOCOL
     sha = hashlib.sha256(proto.read_bytes()).hexdigest()
     check(sha == config.PROTOCOL_SHA256, "protokół A1 niezmieniony od zapisania (SHA-256)")
+    sha2 = hashlib.sha256((config.ROOT / config.PROTOCOL_A2).read_bytes()).hexdigest()
+    check(sha2 == config.PROTOCOL_A2_SHA256, "protokół A2 niezmieniony od zapisania (SHA-256)")
 
 
 def pipeline_test(work: Path) -> None:
@@ -159,8 +178,14 @@ def pipeline_test(work: Path) -> None:
           "prognoza na jutro z dzisiejszego wydania")
     check(by["XX0001A"]["live"]["n"] == 0 and data["test"]["H-A1"]["status"] == "in progress", "test na żywo w toku")
     check(by["XX0001A"]["qc"]["stuck_days"] == 2 and by["XX0001A"]["years"][0]["year"] == 2022, "kontrola jakości i lata od 2022")
+    bad = by["XX0002A"]["holdout"]
+    check(bad["corrected"]["rmse_fc"] < bad["raw"]["rmse_fc"] and data["summary"]["holdout"]["stations"] == 4,
+          "okres odłożony: korekta zmniejsza błąd złej prognozy")
+    check(by["XX0001A"]["forecast"]["tomorrow_corrected"] is not None, "skorygowana prognoza na jutro zapisana w dniu wydania")
     live = pipeline.read_table(P.forecast, "live", ["issue_date", "date"])
     check(len(live) == 2 * 4 * 4 and set(live["lead"]) == {0, 1, 2, 3}, "prognozy na żywo: 2 wydania, wyprzedzenie 0-3 dni")
+    check(live.loc[live["lead"] == 1, "pm25_corr"].notna().all() and live.loc[live["lead"] != 1, "pm25_corr"].isna().all(),
+          "korekta zapisana tylko dla prognozy na jutro")
     obs = pipeline.read_table(P.obs, "obs", ["date"])
     check(not obs.duplicated(["date", "station"]).any() and set(obs["src"]) == {"verified", "utd"}, "pomiary bez duplikatów")
     html = (P.showcase / "aircheck_panel.html").read_text(encoding="utf-8")
@@ -181,6 +206,7 @@ def pipeline_test(work: Path) -> None:
     check(data["test"]["final"] and data["test"]["H-A1"]["stations"] == 4 and data["test"]["H-A1"]["better"] == 3,
           "test potwierdzający zamknięty: 3 z 4 stacji lepsze")
     check(data["test"]["H-A1"]["status"] == "confirmed", "H-A1 potwierdzona na danych syntetycznych (3/4 >= 2/3)")
+    check(data["test_a2"]["H-A3"]["stations"] == 4 and data["test_a2"]["H-A3"]["better"] >= 3, "test A2 na żywo policzony dla 4 stacji")
     # awaria archiwum prognoz (np. limit zapytań) nie zatrzymuje przebiegu: prognoza na żywo jest zapisana
 
     class NoArchive(FakeSources):

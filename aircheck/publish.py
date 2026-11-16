@@ -32,21 +32,30 @@ def map_points(result: Dict) -> Dict:
         a = s["archive_365"]
         tom = s["forecast"]["tomorrow"]
         last = s.get("latest_obs") or {}
-        desc = ((f"Measured at the station on {last['date']}: {last['pm25']} µg/m³ PM2.5. " if last.get("pm25") is not None else "")
-                + f"Forecast for tomorrow: {tom if tom is not None else 'n/a'} µg/m³. "
-                + f"Last 365 days: {WORDS[a['verdict']]}"
-                + (f" (error {a['rmse_fc']} vs {a['rmse_pers']} µg/m³)." if a.get("n") else "."))
+        corr = s["forecast"].get("tomorrow_corrected")
+        hr, hc = s["holdout"]["raw"], s["holdout"]["corrected"]
+        desc = (f"Measured at the station on {last['date']}: {last['pm25']} µg/m³ PM2.5. " if last.get("pm25") is not None else "")
+        if corr is not None:
+            desc += f"Corrected forecast for tomorrow: {corr} µg/m³ (raw Copernicus forecast: {tom if tom is not None else 'n/a'}). "
+        else:
+            desc += f"Forecast for tomorrow: {tom if tom is not None else 'n/a'} µg/m³. "
+        if hc.get("n"):
+            desc += (f"Typical error in the hold-out year: corrected {hc['rmse_fc']}, raw {hr['rmse_fc']}, "
+                     f"rule 'tomorrow = today' {hc['rmse_pers']} µg/m³.")
         feats.append({"type": "Feature", "geometry": {"type": "Point", "coordinates": [s["lon"], s["lat"]]},
                       "properties": {"project": "air-check", "id": s["id"], "title": f"Air Check · {s['city']}",
-                                     "description": desc, "status": a["verdict"], "updated": result["run_date"],
+                                     "description": desc, "status": s["corrected_365"]["verdict"],
+                                     "raw_status": a["verdict"], "updated": result["run_date"],
                                      "reading": last.get("pm25"), "reading_unit": "µg/m³ PM2.5",
-                                     "reading_date": last.get("date"), "forecast_tomorrow": tom, "url": PANEL_URL}})
+                                     "reading_date": last.get("date"), "forecast_tomorrow": tom,
+                                     "forecast_tomorrow_corrected": corr, "url": PANEL_URL}})
     return {"type": "FeatureCollection", "features": feats}
 
 
 def status(result: Dict) -> Dict:
     return {"project": "air-check", "updated": result["updated"], "run_date": result["run_date"],
-            "gate": result["gate"], "summary": result["summary"], "test": result["test"]}
+            "gate": result["gate"], "summary": result["summary"], "test": result["test"],
+            "test_a2": result["test_a2"]}
 
 
 def write_all(P: config.Paths, result: Dict) -> None:

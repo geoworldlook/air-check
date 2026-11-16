@@ -24,6 +24,7 @@ lokalnie: `gwl air-check run` albo `python -m aircheck run`.
 | `registry.py` | Odczyt rejestru; budowa propozycji rejestru z metadanych EEA według zapisanej reguły |
 | `sources/eea.py` | Pomiary: lista plików, odczyt pliku stacji, średnie dobowe (UTC), oznaczenie zaciętego czujnika |
 | `sources/cams.py` | Prognoza CAMS przez Open-Meteo: archiwum (rekonstrukcja) i prognoza wydana dziś |
+| `correct.py` | Korekta prognozy: regresja MOS (wybrana w protokole A2) oraz metody porównawcze: bieżąca korekta błędu, filtr Kalmana, metoda hybrydowa |
 | `core.py` | Pary dni, RMSE, skill wobec reguły „jutro jak dziś”, CSI, przedział ufności (bootstrap blokowy), werdykt |
 | `pipeline.py` | Kroki: pomiary, archiwum prognoz, prognoza na żywo, bramka jakości, miary; `run` i `render` |
 | `publish.py` | Panel HTML (dane w środku pliku), dane JSON, punkty mapy (GeoJSON), stan przebiegu |
@@ -38,7 +39,7 @@ Nowe źródło danych to nowy plik w `sources/` i nowe wiersze w `stations.csv`.
 |---|---|---|
 | `data/obs/obs_RRRR.csv` | date, station | średnia dobowa PM2.5, liczba godzin, źródło (`verified` / `utd`), flaga zaciętego czujnika |
 | `data/forecast/archive_RRRR.csv` | date, station | prognoza z archiwum dostawcy (wyprzedzenie poniżej doby) |
-| `data/forecast/live_RRRR.csv` | issue_date, date, station | prognoza zapisana w dniu wydania, wyprzedzenie 0–3 dni, czas przebiegu modelu |
+| `data/forecast/live_RRRR.csv` | issue_date, date, station | prognoza zapisana w dniu wydania, wyprzedzenie 0–3 dni, czas przebiegu modelu; dla prognozy na jutro także wartość skorygowana (`pm25_corr`), policzona w dniu wydania |
 
 Zapis według klucza: ten sam wiersz nie jest dopisywany drugi raz. Dane zweryfikowane mają pierwszeństwo przed
 bieżącymi. Przy każdym przebiegu archiwum prognoz jest pobierane dla ostatnich 10 dni, więc dziury po nieudanym

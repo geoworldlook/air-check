@@ -56,6 +56,15 @@ Dla każdej stacji składamy pary dni: pomiar z dnia D, prognoza na dzień D i p
 Werdykt dla miasta (`better`, `similar`, `worse`) zapada tylko wtedy, gdy przedział ufności dla skill nie obejmuje zera.
 Przedział liczymy bootstrapem blokowym: losujemy tygodniowe bloki dni ze zwracaniem, 400 razy.
 
+### Krok 5a. Korekta prognozy (`correct.py`, funkcja `mos`)
+
+- Prognoza surowa ma w wielu miastach stały błąd, na przykład zimą jest za wysoka.
+- Dla każdej stacji dopasowujemy prostą regresję: pomiar = a + b · prognoza + c · ostatni znany pomiar.
+- Dopasowanie korzysta z ostatnich 365 dni i tylko z dni wcześniejszych niż dzień prognozy. Korekta nie zna przyszłości.
+- Dla prognozy na jutro „ostatni znany pomiar” to doba sprzed dwóch dni, bo wczorajsza nie jest jeszcze pełna.
+- Skorygowaną prognozę na jutro zapisujemy w dniu wydania obok surowej (kolumna `pm25_corr`).
+- Metodę wybraliśmy na danych do listopada 2025 i zamroziliśmy w protokole A2. Ostatni rok policzyliśmy raz, po zamrożeniu.
+
 ### Krok 6. Publikacja (`publish.py`)
 
 - Panel to jeden plik HTML z danymi w środku: `docs/showcase/aircheck_panel.html`.
@@ -67,7 +76,8 @@ Przedział liczymy bootstrapem blokowym: losujemy tygodniowe bloki dni ze zwraca
 | Rodzaj | Skąd | Status |
 |---|---|---|
 | Rekonstrukcja | archiwum prognoz od XI 2023, pomiary od 2022 | opisowy: reguły powstały po tych danych |
-| Test na żywo | prognozy zapisywane codziennie od dnia startu | potwierdzający: reguły zapisane wcześniej w protokole A1 |
+| Okres odłożony | ostatni rok, policzony raz po zamrożeniu metody korekty | potwierdzający dla korekty: protokół A2 |
+| Test na żywo | prognozy zapisywane codziennie od dnia startu | potwierdzający: reguły zapisane wcześniej w protokołach A1 i A2 |
 
 Protokół (`docs/evidence/A1_protokol_prognozy.md`) ma sumę kontrolną w kodzie. Test `selftest` nie przejdzie,
 jeśli ktoś zmieni protokół po fakcie.
