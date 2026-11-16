@@ -11,7 +11,8 @@ CAMS (prognoza)  ────────┘                                    
                                                                      GitHub Pages (panel) ◀─────┘
 ```
 
-Przebieg dzienny uruchamia GitHub Actions (`.github/workflows/daily.yml`, 09:40 UTC). Po przebiegu automat zapisuje
+Przebieg uruchamia GitHub Actions (`.github/workflows/daily.yml`) trzy razy dziennie (09:40, 13:40 i 18:40 UTC). Wystarczy jeden udany przebieg na dobę:
+kolejny tego samego dnia zastępuje wcześniej zapisaną prognozę, a harmonogram GitHuba bywa spóźniony o kilka godzin. Po przebiegu automat zapisuje
 zmiany w `data/` i `docs/showcase/` do repozytorium. Komputer autora nie jest potrzebny. To samo polecenie działa
 lokalnie: `gwl air-check run` albo `python -m aircheck run`.
 
@@ -50,7 +51,11 @@ Publikacja jest wstrzymana (kod wyjścia 2, panel bez zmian), gdy:
 - świeży pomiar (z ostatnich 4 dni) ma mniej niż połowa stacji, albo
 - dzisiejsza prognoza jest dla mniej niż 90% stacji.
 
+Awaria samego archiwum prognoz (np. limit zapytań u dostawcy) nie zatrzymuje przebiegu: prognoza wydana dziś jest
+zapisywana w pierwszej kolejności, a archiwum uzupełni się przy następnym przebiegu. Stan przebiegu ma wtedy ostrzeżenie.
+
 Każdy nieudany przebieg w GitHub Actions zakłada zgłoszenie (issue) w repozytorium albo dopisuje komentarz do otwartego.
+Pierwszy udany przebieg sam zamyka to zgłoszenie z komentarzem.
 
 ## 5. Wynik (`docs/showcase/`)
 

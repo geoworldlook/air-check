@@ -16,7 +16,8 @@ Nie mówimy nic o zdrowiu ani o normach prawnych.
 
 - **Panel (EN):** 28 miast w 7 krajach (Polska, Włochy, Francja, Szwajcaria, Norwegia, Szwecja, Finlandia).
   Mapa, prognoza na jutro, werdykt dla miasta, wykres ostatnich 120 dni, dni z wysokim pyłem w każdym roku od 2022.
-- **Automat:** przebieg codziennie o 09:40 UTC w GitHub Actions; bramka jakości danych; przy błędzie zgłoszenie w repozytorium.
+- **Automat:** przebieg trzy razy dziennie (09:40, 13:40 i 18:40 UTC) w GitHub Actions; bramka jakości danych; przy błędzie zgłoszenie
+  w repozytorium, które pierwszy udany przebieg sam zamyka.
 - **Rekonstrukcja:** pomiary od 2022-01-01, prognozy z archiwum od 2023-11-01.
 - **Kod:** pakiet `aircheck`, test bez sieci, CI (linter, test, budowa obrazu Dockera).
 

@@ -12,7 +12,8 @@ Jeśli prognoza nie wygrywa z tak prostą regułą, to w tym mieście niewiele w
 
 ## 2. Dzień z życia systemu
 
-Automat startuje o 09:40 UTC (`.github/workflows/daily.yml`) i wykonuje `python -m aircheck run`.
+Automat startuje trzy razy dziennie (09:40, 13:40 i 18:40 UTC) (`.github/workflows/daily.yml`) i wykonuje `python -m aircheck run`.
+Wystarczy jeden udany przebieg na dobę; kolejne są zapasem.
 Kroki są w `aircheck/pipeline.py`, w funkcji `run`.
 
 ### Krok 1. Pomiary ze stacji (`sources/eea.py`)

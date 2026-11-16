@@ -23,9 +23,14 @@ CHUNK = 10
 COLUMNS = ["date", "station", "pm25"]
 
 
-def _get(params: dict, retries: int = 4) -> list:
+WAITS = (15, 30, 60, 90, 120)      # sekundy między próbami; limit minutowy dostawcy odnawia się po 60 s
+
+
+def _get(params: dict, waits=WAITS) -> list:
+    """Zapytanie z ponawianiem. Serwery GitHub Actions dzielą adres IP z innymi, więc limit zapytań (429)
+    zdarza się bez naszej winy; czekamy cierpliwie, a przebieg jest powtarzany kilka razy dziennie."""
     last: Optional[Exception] = None
-    for attempt in range(retries):
+    for wait in (*waits, None):
         try:
             r = requests.get(URL, params=params, timeout=180)
             if r.status_code == 429:
@@ -35,7 +40,8 @@ def _get(params: dict, retries: int = 4) -> list:
             return j if isinstance(j, list) else [j]
         except Exception as e:
             last = e
-            time.sleep(8 * (attempt + 1))
+            if wait is not None:
+                time.sleep(wait)
     raise RuntimeError(f"Open-Meteo niedostępne: {last}")
 
 

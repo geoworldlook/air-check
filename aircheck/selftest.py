@@ -181,6 +181,18 @@ def pipeline_test(work: Path) -> None:
     check(data["test"]["final"] and data["test"]["H-A1"]["stations"] == 4 and data["test"]["H-A1"]["better"] == 3,
           "test potwierdzający zamknięty: 3 z 4 stacji lepsze")
     check(data["test"]["H-A1"]["status"] == "confirmed", "H-A1 potwierdzona na danych syntetycznych (3/4 >= 2/3)")
+    # awaria archiwum prognoz (np. limit zapytań) nie zatrzymuje przebiegu: prognoza na żywo jest zapisana
+
+    class NoArchive(FakeSources):
+        def fc_archive(self, stations, start, end):
+            raise RuntimeError("limit zapytań (429)")
+
+    day3 = end + dt.timedelta(days=1)
+    rc = pipeline.run(work, day3, sources=NoArchive(day3), stations=STATIONS, log=quiet)
+    last = json.loads((P.logs / "last_run.json").read_text(encoding="utf-8"))
+    live = pipeline.read_table(P.forecast, "live", ["issue_date", "date"])
+    check(rc == 0 and last.get("warnings") and (live["issue_date"] == pd.Timestamp(day3)).any(),
+          "awaria archiwum prognoz: przebieg trwa, prognoza na żywo zapisana, ostrzeżenie w stanie")
     # bramka jakości: nieświeże pomiary zatrzymują publikację i nie ruszają panelu
     before = (P.showcase / "aircheck_data.json").read_bytes()
     late = end + dt.timedelta(days=40)

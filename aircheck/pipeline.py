@@ -288,8 +288,17 @@ def run(root: str | Path | None = None, today: dt.date | None = None, backfill: 
         st = stations if stations is not None else registry.load()
         log(f"Air Check {today}: stacji {len(st)}, rekonstrukcja: {backfill}")
         obs = update_obs(st, P, src, backfill, log, today)
-        arch = update_archive(st, P, src, today, backfill, log)
+        # Najpierw prognoza wydana dziś: tylko jej nie da się odtworzyć później.
         live = update_live(st, P, src, today, log)
+        try:
+            arch = update_archive(st, P, src, today, backfill, log)
+        except Exception as e:
+            # Archiwum samo się uzupełni przy następnym przebiegu (pobieramy zawsze ostatnie 10 dni).
+            arch = read_table(P.forecast, "archive", ["date"])
+            if backfill or arch.empty:
+                raise
+            status["warnings"] = [f"archiwum prognoz nieodświeżone: {e}"]
+            log(f"uwaga: archiwum prognoz nieodświeżone ({e}); używam zapisanego, do {arch['date'].max().date()}")
         g = gate(st, obs, live, today)
         status["gate"] = g
         if not g["passed"]:

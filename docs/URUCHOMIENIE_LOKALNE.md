@@ -1,6 +1,6 @@
 # Air Check — uruchomienie
 
-Air Check działa sam: przebieg dzienny uruchamia GitHub Actions o 09:40 UTC i sam publikuje panel.
+Air Check działa sam: GitHub Actions uruchamia przebieg trzy razy dziennie (09:40, 13:40 i 18:40 UTC) i sam publikuje panel.
 Ta instrukcja jest potrzebna tylko wtedy, gdy chcesz uruchomić coś ręcznie.
 
 ## 1. Jedno polecenie
@@ -45,8 +45,8 @@ sprawdza jakość danych i przelicza panel.
 | Objaw | Co to znaczy | Co zrobić |
 |---|---|---|
 | Kod wyjścia 2, napis „bramka jakości” | za mało świeżych pomiarów albo brak prognozy; panel celowo bez zmian | poczekać do jutra; automat spróbuje ponownie |
-| Zgłoszenie „Daily run failed” w repozytorium | przebieg automatu się nie udał | otworzyć log z linku w zgłoszeniu; po udanym przebiegu zamknąć zgłoszenie |
-| Błąd „Open-Meteo niedostępne” | dostawca prognoz nie odpowiada | ponowić później; dziury w archiwum zamkną się same przy następnym przebiegu |
+| Zgłoszenie „Daily run failed” w repozytorium | przebieg automatu się nie udał | zwykle nic: następny udany przebieg sam zamknie zgłoszenie; gdy wisi dłużej niż dobę, otworzyć log z linku |
+| Błąd „Open-Meteo niedostępne” albo „limit zapytań (429)” | dostawca prognoz odrzucił zapytanie z serwera GitHuba | nic: automat ponawia do kilku minut i próbuje jeszcze dwa razy tego dnia |
 | Brak prognoz na żywo z jakiegoś dnia | automat tego dnia nie zadziałał | tego nie da się odtworzyć; dzień wypada z testu potwierdzającego |
 
 ## 5. Raz w roku
