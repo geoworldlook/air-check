@@ -16,9 +16,9 @@ from pathlib import Path
 
 OUT = Path(__file__).resolve().parent / "AirCheck_story.ipynb"
 
-META = '''title: "Is the smog forecast right in my city? 28 cities, checked every day"
+META = '''title: "Is the smog forecast right in my city? 27 cities, checked every day"
 date: "2026-11-15"
-summary: "I compare the Copernicus (CAMS) fine-dust forecast with official stations in 28 European cities. The yardstick is the simplest forecast there is: tomorrow will be like today. In 9 cities the forecast clearly wins. In 7 it clearly loses."
+summary: "I compare the Copernicus (CAMS) fine-dust forecast with official stations in 27 European cities. The yardstick is the simplest forecast there is: tomorrow will be like today. The raw forecast clearly wins in 9 cities and clearly loses in 7. A small correction learned from each station beats the rule in all 27."
 tags: [CAMS, Copernicus, PM2.5, Forecast verification, Validation]
 project: air-check'''
 
@@ -31,7 +31,7 @@ A forecast is useful in a city only if it beats this rule.
 **Data:**
 - measurements: one official urban background station per city, from the European Environment Agency (EEA);
 - forecast: the CAMS ensemble (about 10 km grid), daily mean at the station location;
-- 28 cities in 7 countries: Poland, Italy, France, Switzerland, Norway, Sweden and Finland.
+- 27 cities in 6 countries: Poland, Italy, France, Switzerland, Sweden and Finland.
 
 **How it works:** a small pipeline called [Air Check](https://github.com/geoworldlook/air-check) runs every morning
 without a person. It saves the new forecast, compares the old forecast with what the stations measured, and
@@ -179,16 +179,67 @@ k = int((t["csi_fc"] > t["csi_pers"]).sum())
 display(Markdown(f"The forecast has the higher hit score in **{k} of {len(t)}** of these cities. "
                  f"In the others the rule 'tomorrow = today' catches high-dust days equally well or better."))'''
 
-END = '''## 6. What this does not prove yet
+S6 = '''## 6. Can the forecast be fixed? A small correction for each station
 
-- **These results are descriptive.** I wrote the rules after the archive data already existed.
+The winter error from section 4 is *systematic*: in the same city the forecast is wrong in the same direction again
+and again. Weather services remove such errors with a standard method called **model output statistics (MOS)**:
+a small regression that learns from the past errors at one station.
+
+For each city the corrected forecast is:
+
+`corrected = a + b · forecast + c · last measurement`
+
+The three numbers a, b, c are fitted on the 365 days before the forecast day, so the correction never sees the future.
+
+I chose this form on data before 16 November 2025 and wrote the rules down
+([protocol A2](https://github.com/geoworldlook/air-check/blob/main/docs/evidence/A2_protokol_korekta.md), in Polish).
+Then I tested it on the next 12 months, which the choice never saw (a *hold-out* period).'''
+
+C7 = '''#| echo: false
+h = D["summary"]["holdout"]
+rows = [dict(city=f"{s['city']} ({s['country']})", raw=s["holdout"]["raw"]["rmse_fc"], cor=s["holdout"]["corrected"]["rmse_fc"],
+             rule=s["holdout"]["raw"]["rmse_pers"]) for s in S if s.get("holdout", {}).get("corrected", {}).get("rmse_fc") is not None]
+H = pd.DataFrame(rows)
+H["gain"] = H["rule"] - H["cor"]
+H = H.sort_values("rule")
+fig, ax = plt.subplots(figsize=(8, 8.5))
+y = np.arange(len(H))
+ax.hlines(y, H[["raw", "cor", "rule"]].min(axis=1), H[["raw", "cor", "rule"]].max(axis=1), color="#dde3d8", lw=2)
+ax.scatter(H["raw"], y, color="#b23a2e", s=30, label="raw forecast", zorder=3)
+ax.scatter(H["rule"], y, color="#8a8f88", s=30, marker="D", label="rule 'tomorrow = today'", zorder=3)
+ax.scatter(H["cor"], y, color="#2f7a45", s=42, label="corrected forecast", zorder=4)
+ax.set_yticks(y); ax.set_yticklabels(H["city"])
+ax.set_xlim(0, 20); ax.set_xlabel("typical error (RMSE), µg/m³; lower is better")
+ax.set_title(f"Hold-out year {h['period'][0]} to {h['period'][1]}")
+ax.legend(frameon=False, loc="lower right")
+plt.tight_layout(); plt.show()
+display(Markdown(
+    f"**Result on the hold-out year:** the corrected forecast beats the rule in **{h['corrected_beats_persistence']} of "
+    f"{h['stations']} cities** and beats the raw forecast in **{h['corrected_beats_raw']} of {h['stations']}**. "
+    f"The raw forecast beats the rule in {h['raw_beats_persistence']}. "
+    f"Median error: raw {h['median_rmse_raw']}, rule {h['median_rmse_persistence']}, corrected **{h['median_rmse_corrected']}** µg/m³."))
+big = H.assign(drop=H["raw"] - H["cor"]).sort_values("drop", ascending=False).head(3)
+display(Markdown("Largest improvement: " + ", ".join(f"**{r.city}** {r.raw:.1f} → {r.cor:.1f}" for r in big.itertuples()) + " µg/m³."))'''
+
+S6B = '''Two honest notes:
+
+- **Part of the gain comes from the last measurement.** The correction uses what the station measured the day before.
+  In the live system station data arrive later, so the live version uses the measurement from two days before.
+- **The hold-out year uses archived forecasts.** Their lead time is below one day. The live test of the corrected
+  forecast runs from 18 November 2026 to 15 February 2027, with the same rules.'''
+
+END = '''## 7. What this does not prove yet
+
+- **Sections 2–5 are descriptive.** I wrote those rules after the archive data already existed.
+  Section 6 is a test on a hold-out year, but not yet a live test.
 - **The real test is running now.** Since 14 November 2026 the pipeline saves every day-ahead forecast on the day it
   is issued. The test rules were fixed before the first test day
   ([protocol A1](https://github.com/geoworldlook/air-check/blob/main/docs/evidence/A1_protokol_prognozy.md), in Polish).
-  The window is 16 November 2026 to 13 February 2027. I will report the verdict, also if it is negative.
+  The window is 16 November 2026 to 13 February 2027 for the raw forecast and 18 November 2026 to
+  15 February 2027 for the corrected one. I will report both verdicts, also if they are negative.
 - **One station per city.** A station is a point and the forecast is a square of about 10 km.
-- **Missing cities.** 19 of 47 candidate cities have no usable urban background station in both EEA data feeds
-  (for example Kraków, København, Stockholm and Oslo). The list with reasons is in the repository.
+- **Missing cities.** 20 of 47 candidate cities have no usable urban background station with current data in the
+  EEA feeds (for example Kraków, København, Stockholm, Oslo and Bergen). The list with reasons is in the repository.
 - **No health statement.** This page says nothing about health effects or legal limits.
 
 **Data:** measurements from the European Environment Agency (Air Quality e-Reporting, reported by the national
@@ -210,7 +261,7 @@ def code(text: str) -> dict:
 
 def main() -> None:
     cells = [md(META), md(INTRO), code(SETUP), md(S1), code(C1), md(S2), code(C2), code(C2b), code(C3), md(S3),
-             code(C4), md(S4), code(C5), md(S5), code(C6), md(END)]
+             code(C4), md(S4), code(C5), md(S5), code(C6), md(S6), code(C7), md(S6B), md(END)]
     nb = {"cells": cells, "nbformat": 4, "nbformat_minor": 5,
           "metadata": {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
                        "language_info": {"name": "python"}}}
