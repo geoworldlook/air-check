@@ -1,7 +1,7 @@
 {
  "project": "air-check",
- "updated": "2026-11-18T21:38Z",
- "run_date": "2026-11-18",
+ "updated": "2026-11-19T00:46Z",
+ "run_date": "2026-11-19",
  "gate": {
   "passed": true,
   "fresh_stations": 26,
@@ -48,7 +48,7 @@
    "H-A3": "confirmed",
    "H-A4": "confirmed"
   },
-  "live_pairs_max": 3,
+  "live_pairs_max": 4,
   "first_issue": "2026-11-14",
   "model_run": "2026-11-18T00:00Z"
  },
@@ -57,7 +57,7 @@
    "2026-11-16",
    "2027-02-13"
   ],
-  "days_elapsed": 2,
+  "days_elapsed": 3,
   "days_total": 90,
   "final": false,
   "H-A1": {
@@ -83,7 +83,7 @@
    "2026-11-18",
    "2027-02-15"
   ],
-  "days_elapsed": 0,
+  "days_elapsed": 1,
   "days_total": 90,
   "final": false,
   "H-A3": {
