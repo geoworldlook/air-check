@@ -1,6 +1,6 @@
 {
  "project": "air-check",
- "updated": "2026-11-20T00:56Z",
+ "updated": "2026-11-20T18:04Z",
  "run_date": "2026-11-20",
  "gate": {
   "passed": true,
@@ -50,7 +50,7 @@
   },
   "live_pairs_max": 5,
   "first_issue": "2026-11-14",
-  "model_run": "2026-11-19T00:00Z"
+  "model_run": "2026-11-20T00:00Z"
  },
  "test": {
   "window": [
