@@ -1,7 +1,7 @@
 {
  "project": "air-check",
- "updated": "2026-11-21T23:37Z",
- "run_date": "2026-11-21",
+ "updated": "2026-11-22T17:27Z",
+ "run_date": "2026-11-22",
  "gate": {
   "passed": true,
   "fresh_stations": 27,
@@ -20,8 +20,8 @@
    "SE"
   ],
   "archive_365": {
-   "better": 9,
-   "similar": 11,
+   "better": 8,
+   "similar": 12,
    "worse": 7,
    "insufficient": 0
   },
@@ -48,16 +48,16 @@
    "H-A3": "confirmed",
    "H-A4": "confirmed"
   },
-  "live_pairs_max": 6,
+  "live_pairs_max": 7,
   "first_issue": "2026-11-14",
-  "model_run": "2026-11-21T00:00Z"
+  "model_run": "2026-11-22T00:00Z"
  },
  "test": {
   "window": [
    "2026-11-16",
    "2027-02-13"
   ],
-  "days_elapsed": 5,
+  "days_elapsed": 6,
   "days_total": 90,
   "final": false,
   "H-A1": {
@@ -83,7 +83,7 @@
    "2026-11-18",
    "2027-02-15"
   ],
-  "days_elapsed": 3,
+  "days_elapsed": 4,
   "days_total": 90,
   "final": false,
   "H-A3": {
